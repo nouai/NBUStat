@@ -3,8 +3,12 @@
   "name": "NBUStat",
   "version": "1.1",
   "description": "Exchange rates using NBUStatService API v1",
-  "icons": {"48": "icons/NBUStat-48.png"},
-  "permissions" : ["webRequest"],
+  "icons": {
+    "48": "icons/NBUStat-48.png"
+  },
+  "permissions": [
+    "webRequest"
+  ],
   "applications": {
     "gecko": {
       "id": "nbustat@extension.com",
@@ -16,8 +20,10 @@
       "19": "icons/NBUStat-19.png",
       "38": "icons/NBUStat-38.png"
     },
-	"default_popup": "button/popup.html",
+    "default_popup": "button/popup.html",
     "default_title": "Show me what you got!"
   },
-  "web_accessible_resources": ["https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange/*"]
+  "web_accessible_resources": [
+    "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange/*"
+  ]
 }
