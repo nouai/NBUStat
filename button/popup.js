@@ -3,6 +3,12 @@ var dd;
 var mm;
 var yyyy;
 
+function setDateFields(d, m, y) {
+	dd = d;
+	mm = m;
+	yyyy = y;
+}
+
 function populateCurrencies(info) {
 	var currency = document.getElementById('currency');
 	if (info) {
@@ -37,44 +43,6 @@ function onLoad() {
 
 document.addEventListener("DOMContentLoaded", onLoad);
 
-function onGo() {
-	var currency = document.getElementById('currency').value;
-	
-	dd = document.getElementById('dd').value;
-	mm = document.getElementById('mm').value;
-	yyyy = document.getElementById('yyyy').value;
-	
-	normalizeDate(dd, mm, yyyy);
-	processRate();
-}
-
-function onToday() {
-	dd = today.getDate();
-	mm = today.getMonth() + 1; //January is 0!
-	yyyy = today.getFullYear();
-	
-	normalizeDate(dd, mm, yyyy);
-	processRate();
-	
-	document.getElementById('go').disabled = false;
-}
-
-function onCopy() {
-	copyStringToClipboard(document.getElementById("rate").value);
-}
-
-function showRate(rate) {
-	document.getElementById("rate").value = rate;
-	document.getElementById("separator").hidden = false;
-	document.getElementById("rate").hidden = false;
-}
-
-function hideRate() {
-	document.getElementById("rate").value = '';
-	document.getElementById("separator").hidden = true;
-	document.getElementById("rate").hidden = true;
-}
-
 function normalizeDate(dd, mm, yyyy) {
 	var d = '' + dd;
 	var m = '' + mm;
@@ -97,7 +65,18 @@ function normalizeDate(dd, mm, yyyy) {
 	document.getElementById('yyyy').value = yyyy;
 }
 
-function processRate() {
+function httpGetAsync(theUrl, callback)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() { 
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(xmlHttp.responseText);
+    }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+    xmlHttp.send(null);
+}
+
+function processRate(currency) {
 	var isValid = Date.parse('' + yyyy + '-' + mm + '-' + dd);
 	if (isValid) {
 		var date = '' + yyyy + mm + dd;
@@ -113,15 +92,20 @@ function processRate() {
 	}
 }
 
-function httpGetAsync(theUrl, callback)
-{
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() { 
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-            callback(xmlHttp.responseText);
-    }
-    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-    xmlHttp.send(null);
+function onGo() {
+	setDateFields(document.getElementById('dd').value,
+	              document.getElementById('mm').value,
+				  document.getElementById('yyyy').value);
+	normalizeDate(dd, mm, yyyy);
+	processRate(document.getElementById('currency').value);
+}
+
+function onToday() {
+	setDateFields(today.getDate(), today.getMonth() + 1, today.getFullYear()); //January is 0!
+	normalizeDate(dd, mm, yyyy);
+	processRate(document.getElementById('currency').value);
+	
+	document.getElementById('go').disabled = false;
 }
 
 function copyStringToClipboard(str) {
@@ -139,4 +123,20 @@ function copyStringToClipboard(str) {
    document.execCommand('copy');
    // Remove temporary element
    document.body.removeChild(el);
+}
+
+function onCopy() {
+	copyStringToClipboard(document.getElementById("rate").value);
+}
+
+function showRate(rate) {
+	document.getElementById("rate").value = rate;
+	document.getElementById("separator").hidden = false;
+	document.getElementById("rate").hidden = false;
+}
+
+function hideRate() {
+	document.getElementById("rate").value = '';
+	document.getElementById("separator").hidden = true;
+	document.getElementById("rate").hidden = true;
 }
