@@ -7,7 +7,7 @@
   "permissions" : ["webRequest"],
   "applications": {
     "gecko": {
-      "id": "{0333f1d3-c8f2-4de0-afa3-426d8aa0156e}",
+      "id": "nbustat@extension.com",
       "strict_min_version": "45.0"
     }
   },
