@@ -5,4 +5,5 @@ NBU currency exchange rate for selected date
 - It could help you to retrieve NBU exchange rate for selected currency and date.
 - By click on the toolbar button, you will get the popup menu with the main feature.
 - By click on the rate button the rate it will be coppied to the clipboard.
+- Please, DO NOT USE THIS extension in sensitive financial calculations!
 - That's it!
