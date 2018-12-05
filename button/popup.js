@@ -37,23 +37,35 @@ function onLoad() {
 
 document.addEventListener("DOMContentLoaded", onLoad);
 
-function onToday() {
-	
-	dd = today.getDate();
-	mm = today.getMonth() + 1; //January is 0!
-	yyyy = today.getFullYear();
+function normalizeDate(dd, mm, yyyy) {
+	var d = '' + dd;
+	var m = '' + mm;
+	var y = '' + yyyy;
 
-	if (dd < 10) {
+	if (Number(dd) && d.length < 2 && dd < 10) {
 		dd = '0' + dd;
 	} 
 
-	if (mm < 10) {
+	if (Number(mm) && m.length < 2 && mm < 10) {
 		mm = '0' + mm;
+	}
+	
+	if (Number(yyyy) && y.length < 4 && yyyy < 100) {
+		yyyy = '20' + yyyy;
 	}
 	
 	document.getElementById('dd').value = dd;
 	document.getElementById('mm').value = mm;
 	document.getElementById('yyyy').value = yyyy;
+}
+
+function onToday() {
+	dd = today.getDate();
+	mm = today.getMonth() + 1; //January is 0!
+	yyyy = today.getFullYear();
+	
+	normalizeDate(dd, mm, yyyy);
+	
 	document.getElementById('go').disabled = false;
 }
 
@@ -71,17 +83,12 @@ function hideRate() {
 
 function onGo() {
 	var currency = document.getElementById('currency').value;
+	
 	dd = document.getElementById('dd').value;
 	mm = document.getElementById('mm').value;
 	yyyy = document.getElementById('yyyy').value;
 	
-	if (dd < 10) {
-		dd = '0' + dd;
-	} 
-
-	if (mm < 10) {
-		mm = '0' + mm;
-	}
+	normalizeDate(dd, mm, yyyy);
 	
 	var isValid = Date.parse('' + yyyy + '-' + mm + '-' + dd);
 	if (isValid) {
