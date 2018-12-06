@@ -47,6 +47,7 @@ function onLoad() {
 	document.getElementById('today').addEventListener('click', onToday);
 	document.getElementById('go').addEventListener('click', onGo);
 	document.getElementById('rate').addEventListener('click', onCopy);
+	document.getElementById('currency').addEventListener('change', onCurrencyChange)
 }
 
 document.addEventListener("DOMContentLoaded", onLoad);
@@ -147,4 +148,8 @@ function hideRate() {
 	document.getElementById("rate").value = '';
 	document.getElementById("separator").hidden = true;
 	document.getElementById("rate").hidden = true;
+}
+
+function onCurrencyChange() {
+	onGo();
 }
