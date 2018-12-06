@@ -12,7 +12,9 @@ function setDateFields(d, m, y) {
 function populateCurrencies(info) {
 	var currency = document.getElementById('currency');
 	if (info) {
-		for (var i = 0; i < info.length; i++) {
+		var array = [];
+		var i;
+		for (i = 0; i < info.length; i++) {
 			var opt = info[i].cc;
 			if (opt && opt != 'USD') {
 				var el = document.createElement("option");
@@ -20,8 +22,14 @@ function populateCurrencies(info) {
 				el.textContent = opt;
 				el.value = opt;
 				el.text = opt;
-				currency.appendChild(el);
+				array.push(el);
 			}
+		}
+		array.sort(function(a, b) {
+			return a.text < b.text ? -1 : a.text > b.text ? 1 : 0;
+		});
+		for (var i = 0; i < array.length; i++) {
+			currency.appendChild(array[i]);
 		}
 	}
 }
