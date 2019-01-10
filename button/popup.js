@@ -7,14 +7,19 @@ function setDateFields(d, m, y) {
 	dd = d;
 	mm = m;
 	yyyy = y;
+	document.getElementById('dd').value = dd;
+	document.getElementById('mm').value = mm;
+	document.getElementById('yyyy').value = yyyy;
+}
+
+function setCurrency(c) {
+	document.getElementById('currency').value = c;
 }
 
 function populateCurrencies(info) {
 	var currency = document.getElementById('currency');
 	if (info) {
-		var array = [];
-		var i;
-		for (i = 0; i < info.length; i++) {
+		for (var i = 0; i < info.length; i++) {
 			var opt = info[i].cc;
 			if (opt && opt != 'USD') {
 				var el = document.createElement("option");
@@ -22,21 +27,32 @@ function populateCurrencies(info) {
 				el.textContent = opt;
 				el.value = opt;
 				el.text = opt;
-				array.push(el);
+				currency.appendChild(el);
 			}
 		}
-		array.sort(function(a, b) {
-			return a.text < b.text ? -1 : a.text > b.text ? 1 : 0;
-		});
-		for (var i = 0; i < array.length; i++) {
-			currency.appendChild(array[i]);
-		}
+	}
+	var prevCurrency = localStorage.getItem('NBUStatCurrency');
+	if (prevCurrency) {
+		setCurrency(prevCurrency);
 	}
 }
 
 function onLoad() {
-	onToday();
-	var date = '' + yyyy + mm + dd;
+	var prevDate = localStorage.getItem('NBUStatDate');
+	var date;
+	if (prevDate) {
+	    date = localStorage.getItem('NBUStatDate');
+	}
+	if (date) {
+		yyyy = date.substring(0, 4);
+		mm = date.substring(4, 6);
+		dd = date.substring(6, 8);
+		setDateFields(dd, mm, yyyy);
+	} else {
+		normalizeDate(today.getDate(), today.getMonth() + 1, today.getFullYear());  //January is 0!
+		date = '' + yyyy + mm + dd;
+	}
+	
 	var url = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=' + date + '&json';
 	var request = httpGetAsync(url, function(responseText) {
 		var info = JSON.parse(responseText);
@@ -44,34 +60,30 @@ function onLoad() {
 		    populateCurrencies(info);
 		}
 	});
+	document.getElementById('currency').addEventListener('change', onCurrencyChanged);
 	document.getElementById('today').addEventListener('click', onToday);
 	document.getElementById('go').addEventListener('click', onGo);
 	document.getElementById('rate').addEventListener('click', onCopy);
-	document.getElementById('currency').addEventListener('change', onCurrencyChange)
+	
+	document.getElementById('go').disabled = false;
 }
 
 document.addEventListener("DOMContentLoaded", onLoad);
 
+function normalizeNumber(n, len, max, def) {
+	var nn = '' + n;
+	if (Number(n) && nn.length < len && n < max) {
+		n = def + nn;
+	}
+	return n;
+}
+
 function normalizeDate(dd, mm, yyyy) {
-	var d = '' + dd;
-	var m = '' + mm;
-	var y = '' + yyyy;
-
-	if (Number(dd) && d.length < 2 && dd < 10) {
-		dd = '0' + dd;
-	} 
-
-	if (Number(mm) && m.length < 2 && mm < 10) {
-		mm = '0' + mm;
-	}
+	dd = normalizeNumber(dd, 2, 10, '0');
+	mm = normalizeNumber(mm, 2, 10, '0');
+	yyyy = normalizeNumber(yyyy, 4, 100, '20');
 	
-	if (Number(yyyy) && y.length < 4 && yyyy < 100) {
-		yyyy = '20' + yyyy;
-	}
-	
-	document.getElementById('dd').value = dd;
-	document.getElementById('mm').value = mm;
-	document.getElementById('yyyy').value = yyyy;
+	setDateFields(dd, mm, yyyy);
 }
 
 function httpGetAsync(theUrl, callback)
@@ -94,6 +106,7 @@ function processRate(currency) {
 			var info = JSON.parse(responseText);
 			if (info[0]) {
 				showRate(info[0].rate);
+				localStorage.setItem('NBUStatDate', '' + yyyy + mm + dd);
 			}
 		});
 	} else {
@@ -101,17 +114,20 @@ function processRate(currency) {
 	}
 }
 
+function onCurrencyChanged() {
+	onGo();
+	localStorage.setItem('NBUStatCurrency', document.getElementById('currency').value);
+}
+
 function onGo() {
-	setDateFields(document.getElementById('dd').value,
-	              document.getElementById('mm').value,
-				  document.getElementById('yyyy').value);
-	normalizeDate(dd, mm, yyyy);
+	normalizeDate(document.getElementById('dd').value,
+		          document.getElementById('mm').value,
+			      document.getElementById('yyyy').value);
 	processRate(document.getElementById('currency').value);
 }
 
 function onToday() {
-	setDateFields(today.getDate(), today.getMonth() + 1, today.getFullYear()); //January is 0!
-	normalizeDate(dd, mm, yyyy);
+	normalizeDate(today.getDate(), today.getMonth() + 1, today.getFullYear());  //January is 0!
 	processRate(document.getElementById('currency').value);
 	
 	document.getElementById('go').disabled = false;
@@ -148,8 +164,4 @@ function hideRate() {
 	document.getElementById("rate").value = '';
 	document.getElementById("separator").hidden = true;
 	document.getElementById("rate").hidden = true;
-}
-
-function onCurrencyChange() {
-	onGo();
 }
