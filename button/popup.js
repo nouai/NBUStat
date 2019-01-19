@@ -3,7 +3,7 @@ var normalizedToday;
 var dd;
 var mm;
 var yyyy;
-
+    
 var ValidatorType = {
   CURRENCY_LIST: "cc",
   RATE: "rate"
@@ -54,33 +54,31 @@ function onLoad() {
         mm = date.substring(4, 6);
         dd = date.substring(6, 8);
     } else {
-		localStorage.removeItem('NBUStatDate');
+        localStorage.removeItem('NBUStatDate');
         yyyy = today.getFullYear();
-		mm = today.getMonth() + 1;  //January is 0!
-		dd = today.getDate();
+        mm = today.getMonth() + 1;  //January is 0!
+        dd = today.getDate();
     }
     
-	normalizeDate(dd, mm, yyyy);
-	date = '' + yyyy + mm + dd;
-	
-	console.log(date);
-	
+    normalizeDate(dd, mm, yyyy);
+    date = '' + yyyy + mm + dd;
+    
     var url = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=' + date + '&json';
-	httpGetAsync(url, function(responseText) {
-		var info = JSON.parse(responseText);
-		if (isValidResponse(info, ValidatorType.CURRENCY_LIST)) {
-			populateCurrencies(info);
-			
-			document.getElementById('currency').addEventListener('change', onCurrencyChanged);
-			document.getElementById('today').addEventListener('click', onToday);
-			document.getElementById('go').addEventListener('click', onGo);
-			document.getElementById('rate').addEventListener('click', onCopy);
-			
-			document.getElementById('go').disabled = false;
-			
-			onGo();
-		}
-	});
+    httpGetAsync(url, function(responseText) {
+        var info = JSON.parse(responseText);
+        if (isValidResponse(info, ValidatorType.CURRENCY_LIST)) {
+            populateCurrencies(info);
+            
+            document.getElementById('currency').addEventListener('change', onCurrencyChanged);
+            document.getElementById('today').addEventListener('click', onToday);
+            document.getElementById('go').addEventListener('click', onGo);
+            document.getElementById('rate').addEventListener('click', onCopy);
+            
+            document.getElementById('go').disabled = false;
+            
+            onGo();
+        }
+    });
 }
 
 document.addEventListener("DOMContentLoaded", onLoad);
@@ -105,19 +103,19 @@ function isNull(data) {
     if (data == null || data === undefined) {
         return true;
     }
-	return false;
+    return false;
 }
 
 function isNumber(data) {
-	return !isNaN(Number(data));
+    return !isNaN(Number(data));
 }
 
 function notNull(data) {
-	return !isNull(data);
+    return !isNull(data);
 }
 
 function isValidResponse(response, validatorType) {
-	return notNull(response) && notNull(response[0]) && notNull(response[0][validatorType]);
+    return notNull(response) && notNull(response[0]) && notNull(response[0][validatorType]);
 }
 
 function httpGetAsync(theUrl, callback)
@@ -136,29 +134,28 @@ function processRate(currency) {
     if (isValid) {
         var date = '' + yyyy + mm + dd;
         var url = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json&valcode=' + currency + '&date=' + date;
-		
-		updateRateUrl(url);
-		
-		if (date == normalizedToday) {
-			localStorage.removeItem('NBUStatDate', date);
-		} else {
-			localStorage.setItem('NBUStatDate', date);
-		}
-		
+        
+        updateRateUrl(url);
+        
+        if (date == normalizedToday) {
+            localStorage.removeItem('NBUStatDate', date);
+        } else {
+            localStorage.setItem('NBUStatDate', date);
+        }
+        
         var rate = sessionStorage.getItem(url);
-		console.log("processRate rate: " + rate);
-		if (notNull(rate)) {
-			showRate(rate);
-		} else {
-			httpGetAsync(url, function(responseText) {
-				var info = JSON.parse(responseText);
-				if (isValidResponse(info, ValidatorType.RATE)) {
-					rate = info[0].rate;
-					showRate(rate);
-					sessionStorage.setItem(url, rate);
-				}
-			});
-		}
+        if (notNull(rate)) {
+            showRate(rate);
+        } else {
+            httpGetAsync(url, function(responseText) {
+                var info = JSON.parse(responseText);
+                if (isValidResponse(info, ValidatorType.RATE)) {
+                    rate = info[0].rate;
+                    showRate(rate);
+                    sessionStorage.setItem(url, rate);
+                }
+            });
+        }
     } else {
         hideRate();
     }
@@ -178,7 +175,7 @@ function onGo() {
 
 function onToday() {
     normalizeDate(today.getDate(), today.getMonth() + 1, today.getFullYear());  //January is 0!
-	normalizedToday = '' + yyyy + mm + dd;
+    normalizedToday = '' + yyyy + mm + dd;
     processRate(document.getElementById('currency').value);
     
     document.getElementById('go').disabled = false;
@@ -218,5 +215,5 @@ function hideRate() {
 }
 
 function updateRateUrl(url) {
-	document.getElementById("rateUrl").href = url;
+    document.getElementById("rateUrl").href = url;
 }
