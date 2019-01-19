@@ -1,7 +1,13 @@
 var today = new Date();
+var normalizedToday;
 var dd;
 var mm;
 var yyyy;
+
+var ValidatorType = {
+  CURRENCY_LIST: "cc",
+  RATE: "rate"
+}
 
 function setDateFields(d, m, y) {
     dd = d;
@@ -18,7 +24,7 @@ function setCurrency(c) {
 
 function populateCurrencies(info) {
     var currency = document.getElementById('currency');
-    if (info) {
+    if (notNull(info[0].cc)) {
         for (var i = 0; i < info.length; i++) {
             var opt = info[i].cc;
             if (opt && opt != 'USD') {
@@ -32,7 +38,7 @@ function populateCurrencies(info) {
         }
     }
     var prevCurrency = localStorage.getItem('NBUStatCurrency');
-    if (prevCurrency) {
+    if (notNull(prevCurrency)) {
         setCurrency(prevCurrency);
     }
 }
@@ -40,10 +46,10 @@ function populateCurrencies(info) {
 function onLoad() {
     var prevDate = localStorage.getItem('NBUStatDate');
     var date;
-    if (prevDate) {
+    if (notNull(prevDate)) {
         date = localStorage.getItem('NBUStatDate');
     }
-    if (date) {
+    if (notNull(date)) {
         yyyy = date.substring(0, 4);
         mm = date.substring(4, 6);
         dd = date.substring(6, 8);
@@ -54,18 +60,21 @@ function onLoad() {
     }
     
     var url = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=' + date + '&json';
-    var request = httpGetAsync(url, function(responseText) {
-        var info = JSON.parse(responseText);
-        if (info[0]) {
-            populateCurrencies(info);
-        }
-    });
-    document.getElementById('currency').addEventListener('change', onCurrencyChanged);
-    document.getElementById('today').addEventListener('click', onToday);
-    document.getElementById('go').addEventListener('click', onGo);
-    document.getElementById('rate').addEventListener('click', onCopy);
-    
-    document.getElementById('go').disabled = false;
+	httpGetAsync(url, function(responseText) {
+		var info = JSON.parse(responseText);
+		if (isValidResponse(info, ValidatorType.CURRENCY_LIST)) {
+			populateCurrencies(info);
+			
+			document.getElementById('currency').addEventListener('change', onCurrencyChanged);
+			document.getElementById('today').addEventListener('click', onToday);
+			document.getElementById('go').addEventListener('click', onGo);
+			document.getElementById('rate').addEventListener('click', onCopy);
+			
+			document.getElementById('go').disabled = false;
+			
+			onGo();
+		}
+	});
 }
 
 document.addEventListener("DOMContentLoaded", onLoad);
@@ -86,6 +95,21 @@ function normalizeDate(dd, mm, yyyy) {
     setDateFields(dd, mm, yyyy);
 }
 
+function isNull(data) {
+    if (data == null || data === undefined) {
+        return true;
+    }
+	return false;
+}
+
+function notNull(data) {
+	return !isNull(data);
+}
+
+function isValidResponse(response, validatorType) {
+	return notNull(response) && notNull(response[0]) && notNull(response[0][validatorType]);
+}
+
 function httpGetAsync(theUrl, callback)
 {
     var xmlHttp = new XMLHttpRequest();
@@ -98,17 +122,33 @@ function httpGetAsync(theUrl, callback)
 }
 
 function processRate(currency) {
-    var isValid = Date.parse('' + yyyy + '-' + mm + '-' + dd);
-    if (isValid) {
+    var parseResult = Date.parse('' + yyyy + '-' + mm + '-' + dd);
+    if (notNull(parseResult)) {
         var date = '' + yyyy + mm + dd;
         var url = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json&valcode=' + currency + '&date=' + date;
-        var request = httpGetAsync(url, function(responseText) {
-            var info = JSON.parse(responseText);
-            if (info[0]) {
-                showRate(info[0].rate);
-                localStorage.setItem('NBUStatDate', '' + yyyy + mm + dd);
-            }
-        });
+		
+		updateRateUrl(url);
+		
+		if (date == normalizedToday) {
+			localStorage.removeItem('NBUStatDate', date);
+		} else {
+			localStorage.setItem('NBUStatDate', date);
+		}
+		
+        var rate = sessionStorage.getItem(url);
+		console.log("processRate rate: " + rate);
+		if (notNull(rate)) {
+			showRate(rate);
+		} else {
+			httpGetAsync(url, function(responseText) {
+				var info = JSON.parse(responseText);
+				if (isValidResponse(info, ValidatorType.RATE)) {
+					rate = info[0].rate;
+					showRate(rate);
+					sessionStorage.setItem(url, rate);
+				}
+			});
+		}
     } else {
         hideRate();
     }
@@ -128,6 +168,7 @@ function onGo() {
 
 function onToday() {
     normalizeDate(today.getDate(), today.getMonth() + 1, today.getFullYear());  //January is 0!
+	normalizedToday = '' + yyyy + mm + dd;
     processRate(document.getElementById('currency').value);
     
     document.getElementById('go').disabled = false;
@@ -164,4 +205,8 @@ function hideRate() {
     document.getElementById("rate").value = '';
     document.getElementById("separator").hidden = true;
     document.getElementById("rate").hidden = true;
+}
+
+function updateRateUrl(url) {
+	document.getElementById("rateUrl").href = url;
 }
