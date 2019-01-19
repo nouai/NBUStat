@@ -49,16 +49,23 @@ function onLoad() {
     if (notNull(prevDate)) {
         date = localStorage.getItem('NBUStatDate');
     }
-    if (notNull(date)) {
+	console.log(!isNaN(Number(date)));
+    if (notNull(date) && isNumber(date)) {
         yyyy = date.substring(0, 4);
         mm = date.substring(4, 6);
         dd = date.substring(6, 8);
-        setDateFields(dd, mm, yyyy);
     } else {
-        normalizeDate(today.getDate(), today.getMonth() + 1, today.getFullYear());  //January is 0!
-        date = '' + yyyy + mm + dd;
+		localStorage.removeItem('NBUStatDate');
+        yyyy = today.getFullYear();
+		mm = today.getMonth() + 1;  //January is 0!
+		dd = today.getDate();
     }
     
+	normalizeDate(dd, mm, yyyy);
+	date = '' + yyyy + mm + dd;
+	
+	console.log(date);
+	
     var url = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=' + date + '&json';
 	httpGetAsync(url, function(responseText) {
 		var info = JSON.parse(responseText);
@@ -79,10 +86,10 @@ function onLoad() {
 
 document.addEventListener("DOMContentLoaded", onLoad);
 
-function normalizeNumber(n, len, max, def) {
+function normalizeNumber(n, len, max, prefix) {
     var nn = '' + n;
     if (Number(n) && nn.length < len && n < max) {
-        n = def + nn;
+        n = prefix + nn;
     }
     return n;
 }
@@ -100,6 +107,10 @@ function isNull(data) {
         return true;
     }
 	return false;
+}
+
+function isNumber(data) {
+	return !isNaN(Number(data));
 }
 
 function notNull(data) {
@@ -122,8 +133,8 @@ function httpGetAsync(theUrl, callback)
 }
 
 function processRate(currency) {
-    var parseResult = Date.parse('' + yyyy + '-' + mm + '-' + dd);
-    if (notNull(parseResult)) {
+    var isValid = Date.parse('' + yyyy + '-' + mm + '-' + dd);
+    if (isValid) {
         var date = '' + yyyy + mm + dd;
         var url = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json&valcode=' + currency + '&date=' + date;
 		
