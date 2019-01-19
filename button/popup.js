@@ -49,7 +49,6 @@ function onLoad() {
     if (notNull(prevDate)) {
         date = localStorage.getItem('NBUStatDate');
     }
-	console.log(!isNaN(Number(date)));
     if (notNull(date) && isNumber(date)) {
         yyyy = date.substring(0, 4);
         mm = date.substring(4, 6);
