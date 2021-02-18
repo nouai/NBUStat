@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "NBUStat",
-  "version": "2.0",
+  "version": "2.1",
   "description": "Exchange rates using NBUStatService API v1",
   "icons": {
     "48": "icons/NBUStat-48.png"
