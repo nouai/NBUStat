@@ -1,4 +1,8 @@
-const ENDPOINT = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange';
+const BASE_URL = 'https://bank.gov.ua/';
+const API_ROUTE = 'NBUStatService/v1/statdirectory/exchange';
+const UI_ROUTE = 'en/markets/exchangerates'
+const API_ENDPOINT = BASE_URL + API_ROUTE;
+const UI_ENDPOINT = BASE_URL + UI_ROUTE;
 const NBU_STAT_DATE = 'NBUStatDate';
 const NBU_STAT_CURRENCY = 'NBUStatCurrency';
 
@@ -98,7 +102,7 @@ function onLoad() {
     normalizeDate(dd, mm, yyyy);
     date = '' + yyyy + mm + dd;
 
-    var url = ENDPOINT + '?date=' + date + '&json';
+    var url = API_ENDPOINT + '?date=' + date + '&json';
     httpGetAsync(url, function (responseText) {
         var info = JSON.parse(responseText);
         if (isValidResponse(info, ValidatorType.CURRENCY_LIST)) {
@@ -112,6 +116,8 @@ function onLoad() {
             document.getElementById(ElementId.GO).disabled = false;
 
             onGo();
+        } else {
+            updateRateUrl(UI_ENDPOINT);
         }
     });
 }
@@ -154,17 +160,10 @@ function httpGetAsync(theUrl, callback) {
 
 function processRate(currency) {
     var isValid = Date.parse('' + yyyy + '-' + mm + '-' + dd);
+    isValid = isValid && (isValid <= Date.now());
     if (isValid) {
         var date = '' + yyyy + mm + dd;
-        var url = ENDPOINT + '?json&valcode=' + currency + '&date=' + date;
-
-        updateRateUrl(url);
-
-        if (date === normalizedToday) {
-            localStorage.removeItem(NBU_STAT_DATE, date);
-        } else {
-            localStorage.setItem(NBU_STAT_DATE, date);
-        }
+        var url = API_ENDPOINT + '?json&valcode=' + currency + '&date=' + date;
 
         var rate = sessionStorage.getItem(url);
         if (rate != null) {
@@ -172,15 +171,29 @@ function processRate(currency) {
         } else {
             httpGetAsync(url, function (responseText) {
                 var info = JSON.parse(responseText);
-                if (isValidResponse(info, ValidatorType.RATE)) {
+                isValid = isValidResponse(info, ValidatorType.RATE);
+                if (isValid) {
                     rate = info[0].rate;
                     showRate(rate);
                     sessionStorage.setItem(url, rate);
                 }
             });
         }
-    } else {
+
+        if (isValid) {
+            updateRateUrl(url);
+
+            if (date === normalizedToday) {
+                localStorage.removeItem(NBU_STAT_DATE, date);
+            } else {
+                localStorage.setItem(NBU_STAT_DATE, date);
+            }
+        }
+    }
+
+    if (!isValid) {
         hideRate();
+        updateRateUrl(UI_ENDPOINT);
     }
 }
 
